@@ -1,0 +1,180 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: eligibility-gpt-gateway
+  
+  cloud:
+    gateway:
+      routes:
+        # Auth routes -> Core Service
+        - id: auth-route
+          uri: ${CORE_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: coreServiceCircuitBreaker
+                fallbackUri: forward:/fallback/core-service
+
+        # User profile routes -> Core Service
+        - id: profile-route
+          uri: ${CORE_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/users/**, /api/profiles/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: coreServiceCircuitBreaker
+                fallbackUri: forward:/fallback/core-service
+
+        # Job postings routes -> Core Service
+        - id: job-postings-route
+          uri: ${CORE_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/job-postings/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: coreServiceCircuitBreaker
+                fallbackUri: forward:/fallback/core-service
+
+        # Applications routes -> Core Service
+        - id: applications-route
+          uri: ${CORE_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/applications/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: coreServiceCircuitBreaker
+                fallbackUri: forward:/fallback/core-service
+
+        # RAG/ML routes -> RAG Service
+        - id: rag-upload-route
+          uri: ${RAG_SERVICE_URL:http://localhost:8000}
+          predicates:
+            - Path=/api/rag/upload/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: ragServiceCircuitBreaker
+                fallbackUri: forward:/fallback/rag-service
+
+        - id: rag-query-route
+          uri: ${RAG_SERVICE_URL:http://localhost:8000}
+          predicates:
+            - Path=/api/rag/query/**, /api/rag/eligibility/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: ragServiceCircuitBreaker
+                fallbackUri: forward:/fallback/rag-service
+
+      default-filters:
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter:
+              replenishRate: 100  # requests per second
+              burstCapacity: 200
+              requestedTokens: 1
+        - name: Retry
+          args:
+            retries: 3
+            statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
+            methods: GET, POST
+            backoff:
+              firstBackoff: 50ms
+              maxBackoff: 500ms
+              factor: 2
+              basedOnPreviousValue: false
+
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            exposedHeaders:
+              - Authorization
+            maxAge: 3600
+
+# Resilience4j circuit breaker configuration
+resilience4j:
+  circuitbreaker:
+    instances:
+      coreServiceCircuitBreaker:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 3s
+      ragServiceCircuitBreaker:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        wait-duration-in-open-state: 10s
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 8s  # RAG calls are slower
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics, gateway
+  endpoint:
+    health:
+      show-details: always
+
+# Logging
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    reactor.netty: INFO
+  pattern:
+    console: "%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+---
+# Docker profile
+spring:
+  config:
+    activate:
+      on-profile: docker
+  cloud:
+    gateway:
+      routes:
+        - id: auth-route
+          uri: http://core-service:8081
+          predicates:
+            - Path=/api/auth/**
+        - id: profile-route
+          uri: http://core-service:8081
+          predicates:
+            - Path=/api/users/**, /api/profiles/**
+        - id: job-postings-route
+          uri: http://core-service:8081
+          predicates:
+            - Path=/api/job-postings/**
+        - id: applications-route
+          uri: http://core-service:8081
+          predicates:
+            - Path=/api/applications/**
+        - id: rag-upload-route
+          uri: http://rag-service:8000
+          predicates:
+            - Path=/api/rag/upload/**
+        - id: rag-query-route
+          uri: http://rag-service:8000
+          predicates:
+            - Path=/api/rag/query/**, /api/rag/eligibility/**

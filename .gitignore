@@ -1,0 +1,56 @@
+# Java / Spring Boot
+backend/*/target/
+backend/*/.mvn/
+backend/*/mvnw
+backend/*/mvnw.cmd
+*.class
+*.jar
+*.war
+*.ear
+.idea/
+*.iml
+*.iws
+
+# Python / FastAPI
+backend/rag-service/__pycache__/
+backend/rag-service/*.pyc
+backend/rag-service/.pytest_cache/
+backend/rag-service/.venv/
+backend/rag-service/venv/
+backend/rag-service/*.egg-info/
+backend/rag-service/.mypy_cache/
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.production.local
+
+# Environment files
+.env
+.env.local
+*.env
+
+# Database
+*.db
+*.sqlite
+pgdata/
+
+# IDEs
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+
+# Uploaded PDFs (demo mode)
+uploads/
+temp/
+
+# Model cache
+models/
+.cache/

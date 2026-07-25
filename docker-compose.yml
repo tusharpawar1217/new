@@ -1,0 +1,104 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: eligibility-gpt-db
+    environment:
+      POSTGRES_DB: eligibility_gpt
+      POSTGRES_USER: eligibility_user
+      POSTGRES_PASSWORD: eligibility_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/db-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eligibility_user -d eligibility_gpt"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  gateway:
+    build:
+      context: ./backend/gateway
+      dockerfile: Dockerfile
+    container_name: eligibility-gpt-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      CORE_SERVICE_URL: http://core-service:8081
+      RAG_SERVICE_URL: http://rag-service:8000
+    depends_on:
+      - core-service
+      - rag-service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  core-service:
+    build:
+      context: ./backend/core-service
+      dockerfile: Dockerfile
+    container_name: eligibility-gpt-core
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/eligibility_gpt
+      SPRING_DATASOURCE_USERNAME: eligibility_user
+      SPRING_DATASOURCE_PASSWORD: eligibility_pass
+      JWT_SECRET: ${JWT_SECRET:-your-256-bit-secret-key-change-in-production}
+      RAG_SERVICE_URL: http://rag-service:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  rag-service:
+    build:
+      context: ./backend/rag-service
+      dockerfile: Dockerfile
+    container_name: eligibility-gpt-rag
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://eligibility_user:eligibility_pass@postgres:5432/eligibility_gpt
+      CLAUDE_API_KEY: ${CLAUDE_API_KEY}
+      MODEL_CACHE_DIR: /app/models
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - model_cache:/app/models
+      - uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: eligibility-gpt-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway
+    environment:
+      VITE_API_BASE_URL: http://localhost:8080
+
+volumes:
+  postgres_data:
+  model_cache:
+  uploads:

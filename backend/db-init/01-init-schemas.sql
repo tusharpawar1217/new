@@ -1,0 +1,20 @@
+-- Enable pgvector extension
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Create schemas for service separation
+CREATE SCHEMA IF NOT EXISTS core;
+CREATE SCHEMA IF NOT EXISTS rag;
+
+-- Grant permissions
+GRANT ALL PRIVILEGES ON SCHEMA core TO eligibility_user;
+GRANT ALL PRIVILEGES ON SCHEMA rag TO eligibility_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA core TO eligibility_user;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA rag TO eligibility_user;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA core TO eligibility_user;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA rag TO eligibility_user;
+
+-- Set default privileges for future tables
+ALTER DEFAULT PRIVILEGES IN SCHEMA core GRANT ALL ON TABLES TO eligibility_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA rag GRANT ALL ON TABLES TO eligibility_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA core GRANT ALL ON SEQUENCES TO eligibility_user;
+ALTER DEFAULT PRIVILEGES IN SCHEMA rag GRANT ALL ON SEQUENCES TO eligibility_user;

@@ -1,0 +1,43 @@
+# FastAPI and web server
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# PDF processing
+PyMuPDF==1.23.8
+pdfplumber==0.10.3
+pytesseract==0.3.10
+Pillow==10.2.0
+
+# Database
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.25
+pgvector==0.2.4
+
+# Embeddings and vector search
+sentence-transformers==2.3.1
+transformers==4.36.2
+torch==2.1.2
+faiss-cpu==1.7.4
+
+# LLM integration
+anthropic==0.8.1
+httpx==0.26.0
+
+# Text processing and NLP
+nltk==3.8.1
+spacy==3.7.2
+rank-bm25==0.2.2
+
+# Utilities
+python-dateutil==2.8.2
+python-json-logger==2.0.7
+tenacity==8.2.3
+
+# Development
+pytest==7.4.4
+pytest-asyncio==0.23.3
+black==23.12.1
+flake8==7.0.0

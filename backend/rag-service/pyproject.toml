@@ -1,0 +1,50 @@
+[tool.poetry]
+name = "eligibility-gpt-rag-service"
+version = "0.1.0"
+description = "RAG/ML service for ElgibilityGPT"
+authors = ["Tushar Pawar"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.109.0"
+uvicorn = {extras = ["standard"], version = "^0.27.0"}
+python-multipart = "^0.0.6"
+pydantic = "^2.5.3"
+pydantic-settings = "^2.1.0"
+PyMuPDF = "^1.23.8"
+pdfplumber = "^0.10.3"
+pytesseract = "^0.3.10"
+Pillow = "^10.2.0"
+psycopg2-binary = "^2.9.9"
+sqlalchemy = "^2.0.25"
+pgvector = "^0.2.4"
+sentence-transformers = "^2.3.1"
+transformers = "^4.36.2"
+torch = "^2.1.2"
+faiss-cpu = "^1.7.4"
+anthropic = "^0.8.1"
+httpx = "^0.26.0"
+nltk = "^3.8.1"
+spacy = "^3.7.2"
+rank-bm25 = "^0.2.2"
+python-dateutil = "^2.8.2"
+python-json-logger = "^2.0.7"
+tenacity = "^8.2.3"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.4.4"
+pytest-asyncio = "^0.23.3"
+black = "^23.12.1"
+flake8 = "^7.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
