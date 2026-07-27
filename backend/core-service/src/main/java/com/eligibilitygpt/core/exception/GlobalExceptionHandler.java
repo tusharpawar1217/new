@@ -52,7 +52,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({UserNotFoundException.class, ProfileNotFoundException.class, 
-                      NotificationNotFoundException.class, ApplicationNotFoundException.class})
+                      NotificationNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(
             RuntimeException ex, HttpServletRequest request) {
         log.warn("Resource not found: {}", ex.getMessage());

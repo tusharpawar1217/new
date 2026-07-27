@@ -65,23 +65,6 @@ CREATE TABLE IF NOT EXISTS core.notifications (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- User applications - posts user has marked as interested/eligible/applied
-CREATE TABLE IF NOT EXISTS core.applications (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT REFERENCES core.users(id) ON DELETE CASCADE,
-    notification_id BIGINT REFERENCES core.notifications(id) ON DELETE CASCADE,
-    post_id BIGINT, -- FK to rag.posts, but can't declare FK across schemas
-    
-    -- Application workflow stages
-    status VARCHAR(50) DEFAULT 'interested', -- interested, eligible_confirmed, applied
-    
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    notes TEXT,
-    
-    UNIQUE(user_id, notification_id, post_id)
-);
-
 -- Session profiles (temporary, for anonymous/testing users)
 CREATE TABLE IF NOT EXISTS core.session_profiles (
     id BIGSERIAL PRIMARY KEY,
@@ -102,10 +85,6 @@ CREATE INDEX IF NOT EXISTS idx_user_profiles_category ON core.user_profiles(cate
 CREATE INDEX IF NOT EXISTS idx_notifications_exam_body ON core.notifications(exam_body);
 CREATE INDEX IF NOT EXISTS idx_notifications_status ON core.notifications(status);
 CREATE INDEX IF NOT EXISTS idx_notifications_uploaded_by ON core.notifications(uploaded_by);
-
-CREATE INDEX IF NOT EXISTS idx_applications_user_id ON core.applications(user_id);
-CREATE INDEX IF NOT EXISTS idx_applications_notification_id ON core.applications(notification_id);
-CREATE INDEX IF NOT EXISTS idx_applications_status ON core.applications(status);
 
 CREATE INDEX IF NOT EXISTS idx_session_profiles_session_id ON core.session_profiles(session_id);
 CREATE INDEX IF NOT EXISTS idx_session_profiles_expires_at ON core.session_profiles(expires_at);
